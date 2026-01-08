@@ -68,3 +68,7 @@ jobs:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
           fail_action: false # Permet de voir le rapport même s'il y a des alertes
+        permissions:
+          contents: read
+          issues: write
+          pull-requests: write
