@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-dast_scan:
+  dast_scan:
     runs-on: ubuntu-latest
     needs: [build-and-test] # On ne scanne que si les tests passent
     steps:
