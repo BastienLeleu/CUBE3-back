@@ -1,0 +1,54 @@
+stages:
+  - install
+  - quality    # Nouveau : Pour le Linting
+  - test       # Pour vos tests Jest/Vitest
+  - sonar      # Analyse SonarCloud
+  - deploy     # Simulation
+
+install_dependencies:
+  stage: install
+  image: node:20-alpine
+  script:
+    - npm ci
+    # SCA : Vérifie les failles de sécurité des dépendances immédiatement
+    - npm audit --audit-level=high 
+  artifacts:
+    paths:
+      - node_modules/
+
+linting_code:
+  stage: quality
+  image: node:20-alpine
+  script:
+    - npm run lint
+  allow_failure: false # On refuse un code mal formaté pour Collector
+
+sonarqube_check:
+  stage: sonar
+  image: sonarsource/sonar-scanner-cli:latest
+  needs: ["install_dependencies"]
+  script:
+    - sonar-scanner
+  only:
+    - main
+    - merge_requests
+  allow_failure: false
+
+deploy-production:
+  stage: deploy
+  script:
+    - echo "Test de la pipeline sans déploiement réel."
+    - [cite_start]echo "Simulation de l'envoi vers le serveur 135.125.223.14" [cite: 15, 16]
+  when: manual 
+  allow_failure: true
+
+# dast_zap_scan:
+#   stage: dast
+#   image: owasp/zap2docker-stable
+#   script:
+#     - mkdir -p /zap/wrk
+#     # Scan de l'API pour vérifier l'absence de fuite d'emails/téléphones 
+#     - zap-api-scan.py -t http://votre-api-dev.com/v3/api-docs -f openapi -r report.html
+#   artifacts:
+#     paths: [report.html]
+
