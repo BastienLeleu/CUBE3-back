@@ -42,6 +42,10 @@ jobs:
   dast_scan:
     runs-on: ubuntu-latest
     needs: [build-and-test] # On ne scanne que si les tests passent
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -68,7 +72,3 @@ jobs:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
           fail_action: false # Permet de voir le rapport même s'il y a des alertes
-        permissions:
-          contents: read
-          issues: write
-          pull-requests: write
