@@ -97,21 +97,20 @@ jobs:
           npm run start:prod &
           npx wait-on http://localhost:3000 --timeout 60000
 
-      # Correction des permissions pour Docker/ZAP
       - name: Create ZAP working directory
         run: mkdir -p /home/runner/work/CUBE3-back/CUBE3-back/zap && chmod 777 /home/runner/work/CUBE3-back/CUBE3-back/zap
 
       - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0 # Version plus récente conseillée
+        uses: zaproxy/action-baseline@v0.12.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
           fail_action: false
-          artifact_name: 'zap-report-internal' # Change le nom par défaut pour éviter le conflit
+          artifact_name: 'zap-report-internal'
 
       - name: Upload ZAP Report
-        if: always() # Upload même si le scan échoue
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zap-report-final
