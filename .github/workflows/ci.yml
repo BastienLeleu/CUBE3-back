@@ -9,11 +9,10 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Important pour SonarCloud
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -21,19 +20,21 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Update npm
-        run: npm install -g npm@latest
-
-      - name: Install dependencies
-        run: npm ci
+      - name: Update npm & Install
+        run: |
+          npm install -g npm@latest
+          npm ci
 
       - name: Security Audit (SCA)
         run: npm audit --audit-level=high
 
       - name: Run Lint
-        run: npm run lint # Bloque si les règles strictes ne sont pas respectées
+        run: npm run lint
 
-      - name: Upload coverage for SAST # CRUCIAL pour Sonar
+      - name: Run Tests & Coverage
+        run: npm run test:cov
+
+      - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
@@ -53,28 +54,25 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   code-quality-sast:
-    needs: build-and-test # Ne se lance que si les tests passent
+    needs: build-and-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Run Tests
-        run: npm run test:cov # Génère le rapport LCOV pour Sonar
       - name: Download coverage
         uses: actions/download-artifact@v4
         with:
           name: coverage-report
           path: coverage/
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        
+
   dast_scan:
     runs-on: ubuntu-latest
-    needs: [build-and-test][code-quality-sast]
+    needs: [build-and-test]
     permissions:
       contents: read
       issues: write
@@ -98,7 +96,7 @@ jobs:
           npx wait-on http://localhost:3000 --timeout 60000
 
       - name: Create ZAP working directory
-        run: mkdir -p /home/runner/work/CUBE3-back/CUBE3-back/zap && chmod 777 /home/runner/work/CUBE3-back/CUBE3-back/zap
+        run: mkdir -p ${{ github.workspace }}/zap && chmod 777 ${{ github.workspace }}/zap
 
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
