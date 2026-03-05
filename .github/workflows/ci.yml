@@ -39,9 +39,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  dast_scan:
+dast_scan:
     runs-on: ubuntu-latest
-    needs: [build-and-test] # On ne scanne que si les tests passent
+    needs: [build-and-test]
     permissions:
       contents: read
       issues: write
@@ -60,21 +60,29 @@ jobs:
           npm run build
 
       - name: Start Backend in Background
-        # On lance l'app et on attend qu'elle soit prête
         run: |
           npm run start:prod &
-          npx wait-on http://localhost:3000
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      # Correction des permissions pour Docker/ZAP
+      - name: Create ZAP working directory
+        run: mkdir -p /home/runner/work/CUBE3-back/CUBE3-back/zap && chmod 777 /home/runner/work/CUBE3-back/CUBE3-back/zap
 
       - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.11.0
+        uses: zaproxy/action-baseline@v0.12.0 # Version plus récente conseillée
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
-          fail_action: false # Permet de voir le rapport même s'il y a des alertes
+          fail_action: false
+          artifact_name: 'zap-report-internal' # Change le nom par défaut pour éviter le conflit
 
       - name: Upload ZAP Report
+        if: always() # Upload même si le scan échoue
         uses: actions/upload-artifact@v4
         with:
-          name: zap-report
-          path: report_html.html
+          name: zap-report-final
+          path: |
+            report_html.html
+            report_md.md
+            report_json.json
