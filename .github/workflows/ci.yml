@@ -33,9 +33,39 @@ jobs:
       - name: Run Lint
         run: npm run lint # Bloque si les règles strictes ne sont pas respectées
 
+      - name: Upload coverage for SAST # CRUCIAL pour Sonar
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 1
+
+  secret-scanning:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  code-quality-sast:
+    needs: build-and-test # Ne se lance que si les tests passent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Run Tests
         run: npm run test:cov # Génère le rapport LCOV pour Sonar
-
+      - name: Download coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -44,7 +74,7 @@ jobs:
 
   dast_scan:
     runs-on: ubuntu-latest
-    needs: [build-and-test]
+    needs: [build-and-test][code-quality-sast]
     permissions:
       contents: read
       issues: write
