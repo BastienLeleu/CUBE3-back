@@ -51,3 +51,17 @@ jobs:
     needs: build-and-scan-docker
     uses: ./.github/workflows/publish-docker-hub.yml
     secrets: inherit
+
+  send-notifications:
+    needs: [publish-docker-hub]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Deployment status
+        run: |
+          if [ "${{ needs.publish-docker-hub.result }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+            exit 1
+          fi
