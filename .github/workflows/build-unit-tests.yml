@@ -1,0 +1,39 @@
+name: Build and Unit Tests
+
+on:
+  workflow_call:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Update npm & Install
+        run: |
+          npm install -g npm@latest
+          npm ci
+
+      - name: Security Audit (SCA)
+        run: npm audit --audit-level=high
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Tests & Coverage
+        run: npm run test:cov
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 1

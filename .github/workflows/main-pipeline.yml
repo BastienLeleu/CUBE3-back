@@ -1,0 +1,39 @@
+name: Main CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * 0'
+
+jobs:
+  build-and-test:
+    uses: ./.github/workflows/build-unit-tests.yml
+
+  secure-iac-dockerfile-scan:
+    uses: ./.github/workflows/secure-iac-dockerfile-scan.yml
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+
+  secret-scanning:
+    needs: build-and-test
+    uses: ./.github/workflows/secret-scanning.yml
+    secrets: inherit
+
+  code-quality-sast:
+    needs: build-and-test
+    uses: ./.github/workflows/code-quality-sast.yml
+    secrets: inherit
+
+  dast_scan:
+    needs: build-and-test
+    uses: ./.github/workflows/dast-zap-test.yml
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    secrets: inherit
