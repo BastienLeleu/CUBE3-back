@@ -53,14 +53,19 @@ jobs:
     uses: ./.github/workflows/publish-docker-hub.yml
     secrets: inherit
 
+  deploy-simulator:
+    needs: publish-docker-hub
+    uses: ./.github/workflows/deploy-simulator.yml
+    secrets: inherit
+
   send-notifications:
-    needs: [publish-docker-hub]
+    needs: [deploy-simulator]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Deployment status
         run: |
-          if [ "${{ needs.publish-docker-hub.result }}" == "success" ]; then
+          if [ "${{ needs.deploy-simulator.result }}" == "success" ]; then
             echo "✅ Deployment successful!"
           else
             echo "❌ Deployment failed!"
