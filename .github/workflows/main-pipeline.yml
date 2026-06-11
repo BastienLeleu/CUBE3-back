@@ -37,3 +37,12 @@ jobs:
       issues: write
       pull-requests: write
     secrets: inherit
+
+  build-and-scan-docker:
+    needs: build-and-test
+    uses: ./.github/workflows/build-and-scan-docker.yml
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    secrets: inherit
