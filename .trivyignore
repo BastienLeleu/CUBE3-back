@@ -1,0 +1,4 @@
+# Liste des vulnérabilités CVE ignorées par Trivy
+# Format: ajouter un identifiant CVE par ligne (ex: CVE-2023-12345)
+# Ajoutez des commentaires avec '#' pour justifier pourquoi la vulnérabilité est acceptée.
+
