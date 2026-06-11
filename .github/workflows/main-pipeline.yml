@@ -13,6 +13,7 @@ jobs:
     uses: ./.github/workflows/build-unit-tests.yml
 
   secure-iac-dockerfile-scan:
+    needs: build-and-test
     uses: ./.github/workflows/secure-iac-dockerfile-scan.yml
     permissions:
       security-events: write
@@ -39,7 +40,7 @@ jobs:
     secrets: inherit
 
   build-and-scan-docker:
-    needs: build-and-test
+    needs: [code-quality-sast, secret-scanning, secure-iac-dockerfile-scan]
     uses: ./.github/workflows/build-and-scan-docker.yml
     permissions:
       security-events: write
