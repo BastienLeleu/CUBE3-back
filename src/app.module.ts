@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -25,8 +25,8 @@ import { AuthModule } from './auth/auth.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService): any => ({
-        type: 'better-sqlite3',
+      useFactory: () => ({
+        type: 'better-sqlite3' as const,
         database: 'database.sqlite',
         autoLoadEntities: true,
         synchronize: true, // ATTENTION: À désactiver en production pure

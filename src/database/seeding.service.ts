@@ -15,11 +15,11 @@ export class SeedingService implements OnApplicationBootstrap {
     private readonly configService: ConfigService,
   ) {}
 
-  async onApplicationBootstrap() {
+  async onApplicationBootstrap(): Promise<void> {
     await this.seedAdminUser();
   }
 
-  private async seedAdminUser() {
+  private async seedAdminUser(): Promise<void> {
     const userCount = await this.userRepository.count();
     if (userCount > 0) {
       this.logger.log('Database already seeded. Skipping Admin creation.');
@@ -27,7 +27,9 @@ export class SeedingService implements OnApplicationBootstrap {
     }
 
     const adminEmail = this.configService.get<string>('ADMIN_DEFAULT_EMAIL');
-    const adminPassword = this.configService.get<string>('ADMIN_DEFAULT_PASSWORD');
+    const adminPassword = this.configService.get<string>(
+      'ADMIN_DEFAULT_PASSWORD',
+    );
 
     if (!adminEmail || !adminPassword) {
       this.logger.warn(

@@ -20,8 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
-    const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+  async validate(payload: { sub: string }): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: payload.sub },
+    });
     if (!user || user.status === 'banned') {
       throw new UnauthorizedException('Accès refusé');
     }

@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -15,7 +19,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<{ message: string; user: Omit<User, 'password_hash'> }> {
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<{ message: string; user: Omit<User, 'password_hash'> }> {
     const existingUser = await this.userRepository.findOne({
       where: { email: registerDto.email },
     });
@@ -52,7 +58,10 @@ export class AuthService {
       throw new UnauthorizedException('Identifiants invalides');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password_hash,
+    );
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Identifiants invalides');
@@ -65,9 +74,11 @@ export class AuthService {
     return user;
   }
 
-  async login(user: User): Promise<{ access_token: string; user: Omit<User, 'password_hash'> }> {
+  async login(
+    user: User,
+  ): Promise<{ access_token: string; user: Omit<User, 'password_hash'> }> {
     const payload = { sub: user.id, email: user.email, role: user.role };
-    
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash, ...userWithoutPassword } = user;
 

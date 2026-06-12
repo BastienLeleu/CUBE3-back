@@ -9,8 +9,8 @@ jest.mock('bcrypt');
 
 describe('SeedingService', () => {
   let service: SeedingService;
-  let userRepository: any;
-  let configService: any;
+  let userRepository: Record<string, jest.Mock>;
+  let configService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     const mockUserRepository = {

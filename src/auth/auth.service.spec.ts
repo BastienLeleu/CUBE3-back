@@ -10,8 +10,8 @@ jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let userRepository: any;
-  let jwtService: any;
+  let userRepository: Record<string, jest.Mock>;
+  let jwtService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     const mockUserRepository = {
@@ -48,34 +48,52 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    const dto = { email: 'test@test.com', password: 'password', first_name: 'John', last_name: 'Doe' };
+    const dto = {
+      email: 'test@test.com',
+      password: 'password',
+      first_name: 'John',
+      last_name: 'Doe',
+    };
 
     it('should throw ConflictException if user already exists', async () => {
       userRepository.findOne.mockResolvedValue({ id: '1' });
 
       await expect(service.register(dto)).rejects.toThrow(ConflictException);
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { email: dto.email } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { email: dto.email },
+      });
     });
 
     it('should create and return user without password', async () => {
       userRepository.findOne.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
-      
+
       const createdUser = { ...dto, password_hash: 'hashed_password' };
       userRepository.create.mockReturnValue(createdUser);
-      
-      const savedUser = { id: '1', ...createdUser, role: UserRole.USER, status: UserStatus.ACTIVE };
+
+      const savedUser = {
+        id: '1',
+        ...createdUser,
+        role: UserRole.USER,
+        status: UserStatus.ACTIVE,
+      };
       userRepository.save.mockResolvedValue(savedUser);
 
       const result = await service.register(dto);
 
       expect(bcrypt.hash).toHaveBeenCalledWith('password', 10);
-      expect(userRepository.create).toHaveBeenCalledWith({ ...dto, password_hash: 'hashed_password' });
+      expect(userRepository.create).toHaveBeenCalledWith({
+        ...dto,
+        password_hash: 'hashed_password',
+      });
       expect(userRepository.save).toHaveBeenCalledWith(createdUser);
-      
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password_hash, ...expectedUser } = savedUser;
-      expect(result).toEqual({ message: 'Inscription réussie', user: expectedUser });
+      expect(result).toEqual({
+        message: 'Inscription réussie',
+        user: expectedUser,
+      });
     });
   });
 
@@ -84,23 +102,41 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if user not found', async () => {
       userRepository.findOne.mockResolvedValue(null);
-      await expect(service.validateUser(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if password does not match', async () => {
-      userRepository.findOne.mockResolvedValue({ email: 'test@test.com', password_hash: 'hash' });
+      userRepository.findOne.mockResolvedValue({
+        email: 'test@test.com',
+        password_hash: 'hash',
+      });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-      await expect(service.validateUser(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if user is banned', async () => {
-      userRepository.findOne.mockResolvedValue({ email: 'test@test.com', password_hash: 'hash', status: UserStatus.BANNED });
+      userRepository.findOne.mockResolvedValue({
+        email: 'test@test.com',
+        password_hash: 'hash',
+        status: UserStatus.BANNED,
+      });
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      await expect(service.validateUser(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should return user if credentials are valid and user is active', async () => {
-      const validUser = { id: '1', email: 'test@test.com', password_hash: 'hash', status: UserStatus.ACTIVE };
+      const validUser = {
+        id: '1',
+        email: 'test@test.com',
+        password_hash: 'hash',
+        status: UserStatus.ACTIVE,
+      };
       userRepository.findOne.mockResolvedValue(validUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
@@ -111,12 +147,21 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return access_token and user object without password', async () => {
-      const user = { id: '1', email: 'test@test.com', role: UserRole.USER, password_hash: 'hash' } as any;
+      const user = {
+        id: '1',
+        email: 'test@test.com',
+        role: UserRole.USER,
+        password_hash: 'hash',
+      } as unknown as User;
       jwtService.sign.mockReturnValue('jwt_token');
 
       const result = await service.login(user);
 
-      expect(jwtService.sign).toHaveBeenCalledWith({ sub: user.id, email: user.email, role: user.role });
+      expect(jwtService.sign).toHaveBeenCalledWith({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      });
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password_hash, ...expectedUser } = user;
       expect(result).toEqual({ access_token: 'jwt_token', user: expectedUser });

@@ -54,18 +54,24 @@ describe('RolesGuard', () => {
         getRequest: jest.fn().mockReturnValue({ user: null }),
       });
 
-      expect(() => guard.canActivate(mockContext as ExecutionContext)).toThrow(ForbiddenException);
+      expect(() => guard.canActivate(mockContext as ExecutionContext)).toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw ForbiddenException if user role is not in required roles', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['admin']);
-      
-      expect(() => guard.canActivate(mockContext as ExecutionContext)).toThrow(ForbiddenException);
+
+      expect(() => guard.canActivate(mockContext as ExecutionContext)).toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should return true if user role matches required roles', () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['user', 'admin']);
-      
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue(['user', 'admin']);
+
       expect(guard.canActivate(mockContext as ExecutionContext)).toBe(true);
     });
   });
