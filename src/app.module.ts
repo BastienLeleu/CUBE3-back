@@ -17,8 +17,8 @@ import { AuthModule } from './auth/auth.module';
         PORT: Joi.number().default(3000),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().default('1d'),
-        ADMIN_DEFAULT_EMAIL: Joi.string().email().optional(),
-        ADMIN_DEFAULT_PASSWORD: Joi.string().optional(),
+        ADMIN_DEFAULT_EMAIL: Joi.string().email().allow(null, '').optional(),
+        ADMIN_DEFAULT_PASSWORD: Joi.string().allow(null, '').optional(),
       }),
     }),
     // Configuration de TypeORM pour PostgreSQL via DATABASE_URL
