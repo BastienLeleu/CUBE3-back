@@ -7,6 +7,10 @@ on:
         required: true
       DEPLOY_APPLI_NAME:
         required: true
+      JWT_SECRET:
+        required: true
+      ADMIN_DEFAULT_PASSWORD:
+        required: false
 
 jobs:
   smoke-test:
@@ -18,7 +22,10 @@ jobs:
 
       - name: Start Docker container in background
         run: |
-          docker run -d -p 3000:3000 --name nestjs-api-demo ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DEPLOY_APPLI_NAME }}:latest
+          docker run -d -p 3000:3000 \
+            -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            -e ADMIN_DEFAULT_PASSWORD="${{ secrets.ADMIN_DEFAULT_PASSWORD }}" \
+            --name nestjs-api-demo ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DEPLOY_APPLI_NAME }}:latest
           echo "Waiting 10 seconds for the application to boot..."
           sleep 10
 

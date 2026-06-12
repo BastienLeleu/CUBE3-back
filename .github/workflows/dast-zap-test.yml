@@ -2,6 +2,11 @@ name: DAST ZAP Test
 
 on:
   workflow_call:
+    secrets:
+      JWT_SECRET:
+        required: true
+      ADMIN_DEFAULT_PASSWORD:
+        required: false
 
 jobs:
   dast_scan:
@@ -20,6 +25,9 @@ jobs:
           npm run build
 
       - name: Start Backend in Background
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ADMIN_DEFAULT_PASSWORD: ${{ secrets.ADMIN_DEFAULT_PASSWORD }}
         run: |
           npm run start:prod &
           npx wait-on http://localhost:3000 --timeout 60000

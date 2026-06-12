@@ -40,7 +40,7 @@ jobs:
     secrets: inherit
 
   build-and-scan-docker:
-    needs: [code-quality-sast, secret-scanning, secure-iac-dockerfile-scan]
+    needs: [code-quality-sast, secret-scanning, secure-iac-dockerfile-scan, dast_scan]
     uses: ./.github/workflows/build-and-scan-docker.yml
     permissions:
       security-events: write
