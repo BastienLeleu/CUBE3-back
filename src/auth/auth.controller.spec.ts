@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { UserRole, UserStatus, User } from '../users/entities/user.entity';
+import { UserRole, UserStatus } from '../users/entities/user.entity';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -55,12 +55,7 @@ describe('AuthController', () => {
         },
       };
 
-      authService.register.mockResolvedValue(
-        expectedResult as unknown as {
-          message: string;
-          user: Omit<User, 'password_hash'>;
-        },
-      );
+      authService.register.mockResolvedValue(expectedResult);
 
       const result = await controller.register(dto);
 
@@ -75,13 +70,10 @@ describe('AuthController', () => {
       const mockUser = { id: '1', email: 'test@test.com' };
       const expectedResult = { access_token: 'token', user: mockUser };
 
-      authService.validateUser.mockResolvedValue(mockUser as unknown as User);
-      authService.login.mockResolvedValue(
-        expectedResult as unknown as {
-          access_token: string;
-          user: Omit<User, 'password_hash'>;
-        },
-      );
+      // @ts-expect-error: mock partiel
+      authService.validateUser.mockResolvedValue(mockUser);
+      // @ts-expect-error: mock partiel
+      authService.login.mockResolvedValue(expectedResult);
 
       const result = await controller.login(dto);
 
