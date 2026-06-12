@@ -39,7 +39,7 @@ describe('SeedingService', () => {
 
     service = module.get<SeedingService>(SeedingService);
     userRepository = module.get(getRepositoryToken(User));
-    configService = module.get<ConfigService>(ConfigService);
+    configService = module.get<ConfigService>(ConfigService) as unknown as Record<string, jest.Mock>;
   });
 
   afterEach(() => {

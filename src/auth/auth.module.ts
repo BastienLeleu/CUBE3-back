@@ -19,7 +19,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRATION', '1d'),
+          // On doit utiliser as any car @nestjs/jwt attend le type strict StringValue de 'ms' et non pas un simple string
+          expiresIn: configService.get<string>('JWT_EXPIRATION', '1d') as any,
         },
       }),
     }),
