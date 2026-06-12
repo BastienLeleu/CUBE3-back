@@ -20,6 +20,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
           // On doit utiliser as any car @nestjs/jwt attend le type strict StringValue de 'ms' et non pas un simple string
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           expiresIn: configService.get<string>('JWT_EXPIRATION', '1d') as any,
         },
       }),
