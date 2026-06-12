@@ -30,6 +30,9 @@ RUN npm ci --omit=dev
 # Copie du build généré à l'étape précédente
 COPY --from=builder /app/dist ./dist
 
+# Donner les droits à l'utilisateur node pour que SQLite puisse créer database.sqlite
+RUN chown -R node:node /app
+
 # Utilisation de l'utilisateur non-root 'node' fourni par l'image Alpine
 USER node
 
