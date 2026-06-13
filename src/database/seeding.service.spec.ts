@@ -11,7 +11,6 @@ jest.mock('bcrypt');
 describe('SeedingService', () => {
   let service: SeedingService;
   let userRepository: Record<string, jest.Mock>;
-  let productRepository: Record<string, jest.Mock>;
   let configService: ConfigService;
 
   beforeEach(async () => {
@@ -50,7 +49,6 @@ describe('SeedingService', () => {
 
     service = module.get<SeedingService>(SeedingService);
     userRepository = module.get(getRepositoryToken(User));
-    productRepository = module.get(getRepositoryToken(Product));
     configService = module.get(ConfigService);
   });
 
