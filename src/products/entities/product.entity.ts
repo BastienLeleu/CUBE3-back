@@ -10,10 +10,10 @@ import {
 import { User } from '../../users/entities/user.entity';
 
 export enum ProductCondition {
-  NEW = 'Neuf',
-  VERY_GOOD = 'Très bon état',
-  GOOD = 'Bon état',
-  USED = 'Usagé',
+  NEW = 'NEW',
+  VERY_GOOD = 'VERY_GOOD',
+  GOOD = 'GOOD',
+  USED = 'USED',
 }
 
 @Entity('products')
