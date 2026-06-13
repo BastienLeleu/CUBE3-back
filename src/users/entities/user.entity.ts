@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Product } from '../../products/entities/product.entity';
 
 export enum UserRole {
   USER = 'user',
@@ -58,4 +60,7 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @OneToMany(() => Product, (product) => product.seller)
+  products: Product[];
 }

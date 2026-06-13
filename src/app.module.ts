@@ -5,8 +5,10 @@ import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { User } from './users/entities/user.entity';
+import { Product } from './products/entities/product.entity';
 import { SeedingService } from './database/seeding.service';
 import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -33,8 +35,9 @@ import { AuthModule } from './auth/auth.module';
       }),
     }),
     // On enregistre l'entité User pour pouvoir utiliser le Repository dans SeedingService
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Product]),
     AuthModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedingService],
