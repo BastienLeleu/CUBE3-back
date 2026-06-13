@@ -1,4 +1,11 @@
-import { Controller, Get, Query, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  ValidationPipe,
+  UseGuards,
+} from '@nestjs/common';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { ProductsService } from './products.service';
 import { GetProductsDto } from './dto/get-products.dto';
 import { Product } from './entities/product.entity';
@@ -8,9 +15,16 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   async findAll(
     @Query(new ValidationPipe({ transform: true })) query: GetProductsDto,
-  ): Promise<Product[]> {
+  ): Promise<{
+    products: Product[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     return this.productsService.findAll(query);
   }
 }

@@ -1,5 +1,14 @@
-import { IsOptional, IsString, IsEnum, IsNumberString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsNumberString,
+  IsInt,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { ProductCondition } from '../entities/product.entity';
+import { IsLessThanOrEqual } from '../decorators/is-less-than-or-equal.decorator';
 
 export class GetProductsDto {
   @IsOptional()
@@ -16,9 +25,22 @@ export class GetProductsDto {
 
   @IsOptional()
   @IsNumberString()
+  @IsLessThanOrEqual('maxPrice')
   minPrice?: string;
 
   @IsOptional()
   @IsNumberString()
   maxPrice?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number = 20;
 }

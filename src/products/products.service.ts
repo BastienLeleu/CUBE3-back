@@ -11,7 +11,12 @@ export class ProductsService {
     private readonly productRepository: Repository<Product>,
   ) {}
 
-  async findAll(query: GetProductsDto): Promise<Product[]> {
+  async findAll(query: GetProductsDto): Promise<{
+    products: Product[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const qb = this.productRepository.createQueryBuilder('product');
 
     // On inclut toujours le vendeur (uniquement id, prénom, nom pour des questions de sécurité)
@@ -49,6 +54,19 @@ export class ProductsService {
       });
     }
 
-    return await qb.getMany();
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const skip = (page - 1) * limit;
+
+    qb.skip(skip).take(limit);
+
+    const [products, total] = await qb.getManyAndCount();
+
+    return {
+      products,
+      total,
+      page,
+      limit,
+    };
   }
 }

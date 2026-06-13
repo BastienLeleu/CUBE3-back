@@ -6,8 +6,11 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Check,
 } from 'typeorm';
+import { Min } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
+import { DecimalTransformer } from '../../utils/decimal.transformer';
 
 export enum ProductCondition {
   NEW = 'NEW',
@@ -17,6 +20,7 @@ export enum ProductCondition {
 }
 
 @Entity('products')
+@Check('CHK_product_price_positive', '"price" > 0')
 export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -27,7 +31,13 @@ export class Product {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: new DecimalTransformer(),
+  })
+  @Min(0.01)
   price: number;
 
   @Column({

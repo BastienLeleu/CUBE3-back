@@ -2,9 +2,9 @@ name: Main CI Pipeline
 
 on:
   push:
-    branches: [ "**" ]
+    branches: ["**"]
   pull_request:
-    branches: [ "**" ]
+    branches: ["**"]
   schedule:
     - cron: '0 2 * * 0'
 
@@ -49,11 +49,13 @@ jobs:
     secrets: inherit
 
   publish-docker-hub:
+    if: github.ref == 'refs/heads/main'
     needs: build-and-scan-docker
     uses: ./.github/workflows/publish-docker-hub.yml
     secrets: inherit
 
   deploy-simulator:
+    if: github.ref == 'refs/heads/main'
     needs: publish-docker-hub
     uses: ./.github/workflows/deploy-simulator.yml
     secrets: inherit

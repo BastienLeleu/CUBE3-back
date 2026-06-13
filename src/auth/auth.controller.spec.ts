@@ -51,7 +51,6 @@ describe('AuthController', () => {
           updated_at: new Date(),
           phone: null,
           avatar_url: null,
-          password_hash: '',
           products: [],
         },
       };

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -38,6 +39,12 @@ import { ProductsModule } from './products/products.module';
     TypeOrmModule.forFeature([User, Product]),
     AuthModule,
     ProductsModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 30,
+      },
+    ]),
   ],
   controllers: [AppController],
   providers: [AppService, SeedingService],

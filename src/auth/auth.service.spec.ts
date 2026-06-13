@@ -92,7 +92,10 @@ describe('AuthService', () => {
       const { password_hash, ...expectedUser } = savedUser;
       expect(result).toEqual({
         message: 'Inscription réussie',
-        user: expectedUser,
+        user: {
+          ...expectedUser,
+          products: [],
+        },
       });
     });
   });

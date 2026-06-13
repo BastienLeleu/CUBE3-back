@@ -45,7 +45,10 @@ export class AuthService {
 
     return {
       message: 'Inscription réussie',
-      user: userWithoutPassword,
+      user: {
+        ...userWithoutPassword,
+        products: [],
+      },
     };
   }
 

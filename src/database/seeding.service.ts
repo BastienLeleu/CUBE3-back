@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { User, UserRole, UserStatus } from '../users/entities/user.entity';
 import { Product, ProductCondition } from '../products/entities/product.entity';
 
@@ -63,7 +64,18 @@ export class SeedingService implements OnApplicationBootstrap {
 
   private async seedSellers(): Promise<User[]> {
     const saltRounds = 10;
-    const passwordHash = await bcrypt.hash('password123', saltRounds);
+
+    let sellerPassword = this.configService.get<string>(
+      'SELLER_DEFAULT_PASSWORD',
+    );
+    if (!sellerPassword) {
+      sellerPassword = crypto.randomBytes(16).toString('hex');
+      this.logger.log(
+        'No SELLER_DEFAULT_PASSWORD provided. Generated a secure random password for sellers.',
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(sellerPassword, saltRounds);
 
     const sellersData = [
       { email: 'seller1@test.com', first_name: 'Alice', last_name: 'Smith' },
@@ -154,8 +166,8 @@ export class SeedingService implements OnApplicationBootstrap {
 
     let i = 1;
     for (const data of productsData) {
-      // Pick a random seller
-      const seller = sellers[Math.floor(Math.random() * sellers.length)];
+      // Pick a random seller securely
+      const seller = sellers[crypto.randomInt(0, sellers.length)];
 
       const product = this.productRepository.create({
         title: data.title,

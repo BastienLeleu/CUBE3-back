@@ -11,7 +11,9 @@ describe('ProductsService', () => {
     leftJoin: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
-    getMany: jest.fn(),
+    skip: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    getManyAndCount: jest.fn(),
   };
 
   const mockRepository = {
@@ -42,10 +44,15 @@ describe('ProductsService', () => {
   describe('findAll', () => {
     it('should return all products with seller relation without any filters', async () => {
       const result = [{ id: '1', title: 'Product 1' }];
-      mockQueryBuilder.getMany.mockResolvedValue(result);
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([result, 1]);
 
       const products = await service.findAll({});
-      expect(products).toEqual(result);
+      expect(products).toEqual({
+        products: result,
+        total: 1,
+        page: 1,
+        limit: 20,
+      });
       expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('product');
       expect(mockQueryBuilder.leftJoin).toHaveBeenCalledWith(
         'product.seller',
@@ -60,7 +67,7 @@ describe('ProductsService', () => {
     });
 
     it('should apply search filter', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([]);
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ search: 'test' });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         'product.title LIKE :search',
@@ -69,7 +76,7 @@ describe('ProductsService', () => {
     });
 
     it('should apply category filter', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([]);
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ category: 'Livres' });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         'product.category = :category',
@@ -78,7 +85,7 @@ describe('ProductsService', () => {
     });
 
     it('should apply condition filter', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([]);
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ condition: ProductCondition.NEW });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         'product.condition = :condition',
@@ -87,7 +94,7 @@ describe('ProductsService', () => {
     });
 
     it('should apply minPrice filter', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([]);
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ minPrice: '10.5' });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         'product.price >= :minPrice',
@@ -96,7 +103,7 @@ describe('ProductsService', () => {
     });
 
     it('should apply maxPrice filter', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([]);
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ maxPrice: '50' });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         'product.price <= :maxPrice',
@@ -105,7 +112,7 @@ describe('ProductsService', () => {
     });
 
     it('should apply all filters simultaneously', async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([]);
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
       await service.findAll({
         search: 'test',
         category: 'Livres',
@@ -114,6 +121,20 @@ describe('ProductsService', () => {
         maxPrice: '100',
       });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledTimes(5);
+    });
+
+    it('should apply pagination parameters (page and limit)', async () => {
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
+      await service.findAll({ page: 3, limit: 10 });
+      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(20); // (3-1) * 10
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
+    });
+
+    it('should use default pagination parameters if not provided', async () => {
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
+      await service.findAll({});
+      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(0); // (1-1) * 20
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(20);
     });
   });
 });
