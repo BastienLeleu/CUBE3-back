@@ -52,6 +52,7 @@ describe('AuthController', () => {
           phone: null,
           avatar_url: null,
           password_hash: '',
+          products: [],
         },
       };
 

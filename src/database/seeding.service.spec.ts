@@ -3,6 +3,7 @@ import { SeedingService } from './seeding.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
+import { Product } from '../products/entities/product.entity';
 import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
@@ -10,11 +11,17 @@ jest.mock('bcrypt');
 describe('SeedingService', () => {
   let service: SeedingService;
   let userRepository: Record<string, jest.Mock>;
+  let productRepository: Record<string, jest.Mock>;
   let configService: ConfigService;
 
   beforeEach(async () => {
     const mockUserRepository = {
       count: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+    };
+
+    const mockProductRepository = {
       create: jest.fn(),
       save: jest.fn(),
     };
@@ -31,6 +38,10 @@ describe('SeedingService', () => {
           useValue: mockUserRepository,
         },
         {
+          provide: getRepositoryToken(Product),
+          useValue: mockProductRepository,
+        },
+        {
           provide: ConfigService,
           useValue: mockConfigService,
         },
@@ -39,6 +50,7 @@ describe('SeedingService', () => {
 
     service = module.get<SeedingService>(SeedingService);
     userRepository = module.get(getRepositoryToken(User));
+    productRepository = module.get(getRepositoryToken(Product));
     configService = module.get(ConfigService);
   });
 
@@ -54,11 +66,13 @@ describe('SeedingService', () => {
       expect(userRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should skip seeding if ADMIN_DEFAULT_EMAIL or PASSWORD is not set', async () => {
+    it('should skip seeding admin if ADMIN_DEFAULT_EMAIL or PASSWORD is not set', async () => {
       userRepository.count.mockResolvedValue(0);
       (configService.get as jest.Mock).mockReturnValue(null);
+      userRepository.save.mockResolvedValue({});
       await service.onApplicationBootstrap();
-      expect(userRepository.create).not.toHaveBeenCalled();
+      // Only 3 sellers are created
+      expect(userRepository.create).toHaveBeenCalledTimes(3);
     });
 
     it('should create admin user if none exists and config is provided', async () => {
@@ -75,7 +89,8 @@ describe('SeedingService', () => {
       await service.onApplicationBootstrap();
 
       expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
-      expect(userRepository.create).toHaveBeenCalled();
+      // Admin + 3 sellers
+      expect(userRepository.create).toHaveBeenCalledTimes(4);
       expect(userRepository.save).toHaveBeenCalledWith(adminMock);
     });
   });
