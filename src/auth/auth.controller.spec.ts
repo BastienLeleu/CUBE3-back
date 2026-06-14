@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserRole, UserStatus } from '../users/entities/user.entity';
+import { Response } from 'express';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -72,7 +73,10 @@ describe('AuthController', () => {
       const dto = { email: 'test@test.com', password: 'password' };
       const mockUser = { id: '1', email: 'test@test.com' };
       const expectedLoginResult = { access_token: 'token', user: mockUser };
-      const expectedControllerResult = { message: 'Connexion réussie', user: mockUser };
+      const expectedControllerResult = {
+        message: 'Connexion réussie',
+        user: mockUser,
+      };
 
       // @ts-expect-error: mock partiel
       authService.validateUser.mockResolvedValue(mockUser);
@@ -82,13 +86,17 @@ describe('AuthController', () => {
       const mockResponse = {
         cookie: jest.fn(),
         clearCookie: jest.fn(),
-      } as unknown as any; // Type 'any' used to mock Express Response
+      } as unknown as Response;
 
       const result = await controller.login(dto, mockResponse);
 
       expect(authService.validateUser).toHaveBeenCalledWith(dto);
       expect(authService.login).toHaveBeenCalledWith(mockUser);
-      expect(mockResponse.cookie).toHaveBeenCalledWith('access_token', 'token', expect.any(Object));
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'access_token',
+        'token',
+        expect.any(Object),
+      );
       expect(result).toEqual(expectedControllerResult);
     });
   });
@@ -97,7 +105,7 @@ describe('AuthController', () => {
     it('should clear the access_token cookie', () => {
       const mockResponse = {
         clearCookie: jest.fn(),
-      } as unknown as any;
+      } as unknown as Response;
 
       const result = controller.logout(mockResponse);
 
