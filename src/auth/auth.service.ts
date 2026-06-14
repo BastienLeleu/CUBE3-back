@@ -30,7 +30,7 @@ export class AuthService {
       throw new ConflictException('Cet email est déjà utilisé');
     }
 
-    const saltRounds = 10;
+    const saltRounds = 12;
     const passwordHash = await bcrypt.hash(registerDto.password, saltRounds);
 
     const newUser = this.userRepository.create({

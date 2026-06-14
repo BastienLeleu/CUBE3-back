@@ -81,7 +81,7 @@ describe('AuthService', () => {
 
       const result = await service.register(dto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('password', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('password', 12);
       expect(userRepository.create).toHaveBeenCalledWith({
         ...dto,
         password_hash: 'hashed_password',

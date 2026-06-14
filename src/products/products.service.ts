@@ -27,8 +27,10 @@ export class ProductsService {
     ]);
 
     if (query.search) {
-      qb.andWhere('product.title LIKE :search', {
-        search: `%${query.search}%`,
+      // Échappement des caractères spéciaux % et _ pour éviter les requêtes lentes/ReDoS
+      const escapedSearch = query.search.replace(/[%_]/g, '\\$&');
+      qb.andWhere('product.title ILIKE :search', {
+        search: `%${escapedSearch}%`,
       });
     }
 

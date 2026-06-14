@@ -72,7 +72,7 @@ describe('ProductsService', () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ search: 'test' });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'product.title LIKE :search',
+        'product.title ILIKE :search',
         { search: '%test%' },
       );
     });
