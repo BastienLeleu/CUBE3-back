@@ -27,8 +27,8 @@ export class ProductsService {
     ]);
 
     if (query.search) {
-      // Échappement des caractères spéciaux % et _ pour éviter les requêtes lentes/ReDoS
-      const escapedSearch = query.search.replace(/[%_]/g, '\\$&');
+      // Échappement des caractères spéciaux %, _ et \ pour éviter les requêtes lentes/ReDoS et failles SQL
+      const escapedSearch = query.search.replace(/[\\%_]/g, String.raw`\$&`);
       qb.andWhere('product.title ILIKE :search', {
         search: `%${escapedSearch}%`,
       });

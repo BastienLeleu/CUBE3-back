@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap(): Promise<void> {
@@ -26,9 +27,11 @@ async function bootstrap(): Promise<void> {
   // Active la gestion des cookies
   app.use(cookieParser());
 
+  const configService = app.get(ConfigService);
+
   // Autorise le CORS de manière stricte
   app.enableCors({
-    origin: 'http://localhost:4200',
+    origin: configService.get<string>('CORS_ORIGIN') || 'http://localhost:4200',
     credentials: true,
   });
 

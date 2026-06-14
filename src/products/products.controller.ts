@@ -1,17 +1,10 @@
-import {
-  Controller,
-  Get,
-  Query,
-  ValidationPipe,
-  UseGuards,
-} from '@nestjs/common';
-import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
+import { Controller, Get, Query, ValidationPipe } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ProductsService } from './products.service';
 import { GetProductsDto } from './dto/get-products.dto';
 import { Product } from './entities/product.entity';
 
 @Controller('products')
-@UseGuards(ThrottlerGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 

@@ -7,7 +7,9 @@ export class EnableRLS1700000000000 implements MigrationInterface {
       return;
     }
 
-    await queryRunner.query(`ALTER TABLE cart_item ENABLE ROW LEVEL SECURITY;`);
+    await queryRunner.query(
+      `ALTER TABLE cart_item ENABLE ROW LEVEL SECURITY; ALTER TABLE cart_item FORCE ROW LEVEL SECURITY;`,
+    );
 
     await queryRunner.query(`
       CREATE POLICY "Cart owner policy SELECT" ON cart_item

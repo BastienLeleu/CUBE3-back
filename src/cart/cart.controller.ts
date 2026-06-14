@@ -22,15 +22,6 @@ export class CartController {
     return this.cartService.getCart(req.user.id);
   }
 
-  @Get('debug')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getDebugCart(@Request() req: any): Promise<any> {
-    return this.cartService
-      .getCart(req.user.id)
-      .then((res) => res)
-      .catch((err) => ({ error: err.message }));
-  }
-
   @Post('add')
   addToCart(
     @Request() req: { user: { id: string } },

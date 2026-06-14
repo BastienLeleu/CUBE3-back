@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { Product, ProductCondition } from './entities/product.entity';
 import { GetProductsDto } from './dto/get-products.dto';
 
@@ -141,12 +141,6 @@ describe('ProductsController', () => {
 
       expect(result).toEqual(expectedResult);
       expect(service.findAll).toHaveBeenCalledWith(query);
-    });
-
-    it('should be protected by ThrottlerGuard for rate-limiting', () => {
-      const guards = Reflect.getMetadata('__guards__', ProductsController);
-      expect(guards).toBeDefined();
-      expect(guards).toContain(ThrottlerGuard);
     });
   });
 });

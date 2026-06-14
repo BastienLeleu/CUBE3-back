@@ -95,7 +95,12 @@ describe('AuthController', () => {
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'access_token',
         'token',
-        expect.any(Object),
+        expect.objectContaining({
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 24 * 60 * 60 * 1000,
+        }),
       );
       expect(result).toEqual(expectedControllerResult);
     });

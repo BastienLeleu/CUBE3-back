@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { CartItem } from './entities/cart-item.entity';
 import { AddToCartDto } from './dto/add-to-cart.dto';
@@ -11,6 +11,8 @@ export interface CartResponse {
 
 @Injectable()
 export class CartService {
+  private readonly logger = new Logger(CartService.name);
+
   constructor(private readonly dataSource: DataSource) {}
 
   private async withRlsTransaction<T>(
@@ -23,7 +25,10 @@ export class CartService {
 
     try {
       if (this.dataSource.options.type === 'postgres') {
-        await queryRunner.query(`SET LOCAL app.current_user_id = '${userId}';`);
+        await queryRunner.query(
+          `SELECT set_config('app.current_user_id', $1, true)`,
+          [userId],
+        );
       }
 
       const result = await operation(queryRunner.manager);
@@ -39,13 +44,13 @@ export class CartService {
   }
 
   async getCart(userId: string): Promise<CartResponse> {
-    console.log('GET CART FOR USER:', userId);
+    this.logger.debug(`GET CART FOR USER: ${userId}`);
     return this.withRlsTransaction(userId, async (manager) => {
       const items = await manager.find(CartItem, {
         where: { user_id: userId },
         relations: { product: true },
       });
-      console.log('GET CART ITEMS DB:', items.length);
+      this.logger.debug(`GET CART ITEMS DB: ${items.length}`);
 
       const total = items.reduce(
         (sum: number, item: CartItem) =>

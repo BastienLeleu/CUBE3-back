@@ -190,5 +190,22 @@ describe('AuthService', () => {
       expect(result.user.cart_items).toEqual([]);
       expect(result.user).not.toHaveProperty('password_hash');
     });
+
+    it('should return user with cart_items if user has cart_items', async () => {
+      const user = {
+        id: '3',
+        email: 'buyer@test.com',
+        role: UserRole.USER,
+        password_hash: 'hash3',
+        cart_items: [{ id: 'c1', product_id: 'p1', quantity: 1 }],
+      } as unknown as User;
+      jwtService.sign.mockReturnValue('jwt_token');
+
+      const result = await service.login(user);
+
+      expect(result.user.products).toEqual([]);
+      expect(result.user.cart_items).toEqual(user.cart_items);
+      expect(result.user).not.toHaveProperty('password_hash');
+    });
   });
 });

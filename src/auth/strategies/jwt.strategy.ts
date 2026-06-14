@@ -7,6 +7,10 @@ import { Repository } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Request } from 'express';
 
+export const cookieExtractor = (req: Request): string | null => {
+  return req?.cookies?.['access_token'] || null;
+};
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -15,11 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly userRepository: Repository<User>,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: Request): string | null => {
-          return req?.cookies?.['access_token'] || null;
-        },
-      ]),
+      jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('JWT_SECRET') || 'default_secret',
     });

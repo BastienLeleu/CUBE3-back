@@ -18,6 +18,10 @@ import { CartModule } from './cart/cart.module';
     ConfigModule.forRoot({
       isGlobal: true, // Rend le ConfigService disponible partout sans l'importer explicitement
       validationSchema: Joi.object({
+        CORS_ORIGIN: Joi.string().uri().default('http://localhost:4200'),
+        NODE_ENV: Joi.string()
+          .valid('development', 'production', 'test')
+          .default('development'),
         PORT: Joi.number().default(3000),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().default('1d'),
@@ -31,7 +35,8 @@ import { CartModule } from './cart/cart.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const dbUrl = configService.get<string>('DATABASE_URL');
-        const isProduction = process.env.NODE_ENV === 'production';
+        const isProduction =
+          configService.get<string>('NODE_ENV') === 'production';
         if (dbUrl) {
           return {
             type: 'postgres',

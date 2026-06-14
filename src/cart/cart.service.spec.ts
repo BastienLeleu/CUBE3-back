@@ -63,7 +63,8 @@ describe('CartService', () => {
       expect(queryRunner.connect).toHaveBeenCalled();
       expect(queryRunner.startTransaction).toHaveBeenCalled();
       expect(queryRunner.query).toHaveBeenCalledWith(
-        "SET LOCAL app.current_user_id = 'user1';",
+        `SELECT set_config('app.current_user_id', $1, true)`,
+        ['user1'],
       );
       expect(queryRunner.commitTransaction).toHaveBeenCalled();
       expect(queryRunner.release).toHaveBeenCalled();
