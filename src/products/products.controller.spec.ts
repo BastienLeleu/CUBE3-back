@@ -4,7 +4,6 @@ import { ProductsService } from './products.service';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { Product, ProductCondition } from './entities/product.entity';
 import { GetProductsDto } from './dto/get-products.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
