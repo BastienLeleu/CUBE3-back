@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
 } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { CartItem } from './entities/cart-item.entity';
@@ -79,7 +78,7 @@ export class CartService {
       });
 
       if (cartItem) {
-        throw new ConflictException('Ce produit est déjà dans votre panier');
+        cartItem.quantity += dto.quantity;
       } else {
         cartItem = manager.create(CartItem, {
           user_id: userId,

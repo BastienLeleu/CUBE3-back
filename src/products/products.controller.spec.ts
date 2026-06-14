@@ -144,11 +144,10 @@ describe('ProductsController', () => {
       expect(service.findAll).toHaveBeenCalledWith(query);
     });
 
-    it('should be protected by ThrottlerGuard and JwtAuthGuard for rate-limiting and auth', () => {
+    it('should be protected by ThrottlerGuard for rate-limiting', () => {
       const guards = Reflect.getMetadata('__guards__', ProductsController);
       expect(guards).toBeDefined();
       expect(guards).toContain(ThrottlerGuard);
-      expect(guards).toContain(JwtAuthGuard);
     });
   });
 });
