@@ -68,21 +68,41 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('should call authService.validateUser and authService.login and return the result', async () => {
+    it('should call authService.validateUser and authService.login, set cookie and return the result', async () => {
       const dto = { email: 'test@test.com', password: 'password' };
       const mockUser = { id: '1', email: 'test@test.com' };
-      const expectedResult = { access_token: 'token', user: mockUser };
+      const expectedLoginResult = { access_token: 'token', user: mockUser };
+      const expectedControllerResult = { message: 'Connexion réussie', user: mockUser };
 
       // @ts-expect-error: mock partiel
       authService.validateUser.mockResolvedValue(mockUser);
       // @ts-expect-error: mock partiel
-      authService.login.mockResolvedValue(expectedResult);
+      authService.login.mockResolvedValue(expectedLoginResult);
 
-      const result = await controller.login(dto);
+      const mockResponse = {
+        cookie: jest.fn(),
+        clearCookie: jest.fn(),
+      } as unknown as any; // Type 'any' used to mock Express Response
+
+      const result = await controller.login(dto, mockResponse);
 
       expect(authService.validateUser).toHaveBeenCalledWith(dto);
       expect(authService.login).toHaveBeenCalledWith(mockUser);
-      expect(result).toEqual(expectedResult);
+      expect(mockResponse.cookie).toHaveBeenCalledWith('access_token', 'token', expect.any(Object));
+      expect(result).toEqual(expectedControllerResult);
+    });
+  });
+
+  describe('logout', () => {
+    it('should clear the access_token cookie', () => {
+      const mockResponse = {
+        clearCookie: jest.fn(),
+      } as unknown as any;
+
+      const result = controller.logout(mockResponse);
+
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('access_token');
+      expect(result).toEqual({ message: 'Déconnexion réussie' });
     });
   });
 });
