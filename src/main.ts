@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
+import { ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -21,8 +23,23 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  // Autorise le CORS si ton front est sur un autre port
-  app.enableCors();
+  // Active la gestion des cookies
+  app.use(cookieParser());
+
+  // Autorise le CORS de manière stricte
+  app.enableCors({
+    origin: 'http://localhost:4200',
+    credentials: true,
+  });
+
+  // Active la validation globale des DTOs
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
   console.log(`Application is running on: ${await app.getUrl()}`);

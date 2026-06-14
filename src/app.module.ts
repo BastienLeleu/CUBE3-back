@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -31,19 +31,20 @@ import { CartModule } from './cart/cart.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const dbUrl = configService.get<string>('DATABASE_URL');
+        const isProduction = process.env.NODE_ENV === 'production';
         if (dbUrl) {
           return {
             type: 'postgres',
             url: dbUrl,
             autoLoadEntities: true,
-            synchronize: true, // ATTENTION: À désactiver en production pure
+            synchronize: !isProduction, // Disabled in production
           };
         }
         return {
           type: 'better-sqlite3' as const,
           database: 'database.sqlite',
           autoLoadEntities: true,
-          synchronize: true,
+          synchronize: !isProduction,
           logging: true,
         };
       },
@@ -61,6 +62,13 @@ import { CartModule } from './cart/cart.module';
     CartModule,
   ],
   controllers: [AppController],
-  providers: [AppService, SeedingService],
+  providers: [
+    AppService,
+    SeedingService,
+    {
+      provide: 'APP_GUARD',
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
