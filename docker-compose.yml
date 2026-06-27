@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # 1. Base de données PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: collector-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: collector_db
+      POSTGRES_USER: collector
+      POSTGRES_PASSWORD: collector_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U collector -d collector_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - collector-network
+
+  # 2. Application Backend NestJS
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: collector-backend
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://collector:collector_password@postgres:5432/collector_db
+      JWT_SECRET: super_secret_jwt_key_collector_shop_2026!
+      CORS_ORIGIN: http://localhost:4200
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - collector-network
+
+  # 3. Prometheus (Scraping des métriques)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: collector-prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+    networks:
+      - collector-network
+
+  # 4. Grafana (Dashboards & Supervision)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: collector-grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin_password
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3001:3000" # Port 3001 hôte -> 3000 conteneur (pour éviter le conflit avec NestJS)
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - collector-network
+
+  # 5. PgHero (Supervision SQL PostgreSQL)
+  pghero:
+    image: ankane/pghero:latest
+    container_name: collector-pghero
+    restart: always
+    environment:
+      DATABASE_URL: postgres://collector:collector_password@postgres:5432/collector_db
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - collector-network
+
+networks:
+  collector-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

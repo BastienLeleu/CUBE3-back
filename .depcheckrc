@@ -1,0 +1,27 @@
+{
+  "ignores": [
+    "@nestjs/cli",
+    "@nestjs/schematics",
+    "@nestjs/testing",
+    "@nestjs/platform-express",
+    "@nestjs/mapped-types",
+    "express",
+    "@types/*",
+    "@typescript-eslint/*",
+    "@eslint/*",
+    "eslint*",
+    "prettier*",
+    "jest",
+    "ts-jest",
+    "ts-loader",
+    "ts-node",
+    "tsconfig-paths",
+    "typescript",
+    "supertest",
+    "source-map-support",
+    "reflect-metadata",
+    "rxjs",
+    "pg",
+    "better-sqlite3"
+  ]
+}

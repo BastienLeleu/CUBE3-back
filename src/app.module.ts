@@ -11,9 +11,18 @@ import { SeedingService } from './database/seeding.service';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { CartModule } from './cart/cart.module';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
+    PrometheusModule.register({
+      path: '/metrics',
+      defaultMetrics: {
+        enabled: true,
+      },
+    }),
+    HealthModule,
     // Configuration globale des variables d'environnement
     ConfigModule.forRoot({
       isGlobal: true, // Rend le ConfigService disponible partout sans l'importer explicitement

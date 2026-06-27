@@ -25,6 +25,9 @@ jobs:
       - name: Security Audit (SCA)
         run: npm audit --audit-level=high
 
+      - name: Check Unused Dependencies (depcheck)
+        run: npx depcheck
+
       - name: Run Lint
         run: npm run lint
 
