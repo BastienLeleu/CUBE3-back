@@ -7,7 +7,7 @@ describe('GetProductsDto', () => {
   it('should validate with empty object since all fields are optional', () => {
     const dto = new GetProductsDto();
     const errors = validateSync(dto);
-    expect(errors.length).toBe(0);
+    expect(errors).toHaveLength(0);
   });
 
   it('should validate with correct types', () => {
@@ -19,7 +19,7 @@ describe('GetProductsDto', () => {
     dto.maxPrice = '100';
 
     const errors = validateSync(dto);
-    expect(errors.length).toBe(0);
+    expect(errors).toHaveLength(0);
   });
 
   it('should fail validation if minPrice is not a number string', () => {
@@ -68,7 +68,7 @@ describe('GetProductsDto', () => {
     it('should assign default values and validate successfully when undefined', () => {
       const dto = plainToInstance(GetProductsDto, {});
       const errors = validateSync(dto);
-      expect(errors.length).toBe(0);
+      expect(errors).toHaveLength(0);
       expect(dto.page).toBe(1);
       expect(dto.limit).toBe(20);
     });
@@ -76,7 +76,7 @@ describe('GetProductsDto', () => {
     it('should validate and transform valid numeric string inputs', () => {
       const dto = plainToInstance(GetProductsDto, { page: '2', limit: '50' });
       const errors = validateSync(dto);
-      expect(errors.length).toBe(0);
+      expect(errors).toHaveLength(0);
       expect(dto.page).toBe(2);
       expect(dto.limit).toBe(50);
     });
@@ -122,7 +122,7 @@ describe('GetProductsDto', () => {
     it('should validate successfully for boundary cases (page=1, limit=100)', () => {
       const dto = plainToInstance(GetProductsDto, { page: 1, limit: 100 });
       const errors = validateSync(dto);
-      expect(errors.length).toBe(0);
+      expect(errors).toHaveLength(0);
     });
   });
 });

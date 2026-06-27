@@ -179,7 +179,7 @@ describe('SeedingService', () => {
       // Ensure no products created
       const calls = mockManager.create.mock.calls;
       const productCalls = calls.filter((call) => call[0] === Product);
-      expect(productCalls.length).toBe(0);
+      expect(productCalls).toHaveLength(0);
     });
 
     it('should log an error when the transaction rejects', async () => {
