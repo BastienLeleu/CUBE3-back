@@ -20,7 +20,7 @@ jobs:
       - name: Update npm & Install
         run: |
           npm install -g npm@latest
-          npm ci
+          npm ci || npm ci
 
       - name: Security Audit (SCA)
         run: npm audit --audit-level=high
