@@ -41,7 +41,7 @@ EXPOSE 3000
 
 # Vérification de santé (Healthcheck) pour s'assurer que le backend répond
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
 # Démarrage de l'application
 CMD ["node", "dist/main.js"]

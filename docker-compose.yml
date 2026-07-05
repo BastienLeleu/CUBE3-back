@@ -35,6 +35,7 @@ services:
       DATABASE_URL: postgresql://collector:collector_password@postgres:5432/collector_db
       JWT_SECRET: super_secret_jwt_key_collector_shop_2026!
       CORS_ORIGIN: http://localhost:4200
+      DB_SYNCHRONIZE: "true"
     ports:
       - "3000:3000"
     depends_on:

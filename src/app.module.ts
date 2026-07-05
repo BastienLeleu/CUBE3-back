@@ -51,7 +51,9 @@ import { HealthModule } from './health/health.module';
             type: 'postgres',
             url: dbUrl,
             autoLoadEntities: true,
-            synchronize: !isProduction, // Disabled in production
+            synchronize:
+              configService.get<string>('DB_SYNCHRONIZE') === 'true' ||
+              !isProduction, // Enabled via env var in Docker Compose POC
           };
         }
         return {
