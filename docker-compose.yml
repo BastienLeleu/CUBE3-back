@@ -36,6 +36,9 @@ services:
       JWT_SECRET: super_secret_jwt_key_collector_shop_2026!
       CORS_ORIGIN: http://localhost:4200
       DB_SYNCHRONIZE: "true"
+      ADMIN_DEFAULT_EMAIL: admin@collector.shop
+      ADMIN_DEFAULT_PASSWORD: Password123!
+      SELLER_DEFAULT_PASSWORD: Password123!
     ports:
       - "3000:3000"
     depends_on:
