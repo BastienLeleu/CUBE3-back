@@ -20,6 +20,19 @@ export class SeedingService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
+    const isProduction =
+      this.configService.get<string>('NODE_ENV') === 'production';
+    const forceSeeding =
+      this.configService.get<string>('FORCE_SEEDING') === 'true' ||
+      this.configService.get<string>('ENABLE_SEEDING') === 'true';
+
+    if (isProduction && !forceSeeding) {
+      this.logger.log(
+        'Seeding is disabled in production environment (use FORCE_SEEDING=true to override).',
+      );
+      return;
+    }
+
     try {
       await this.userRepository.manager.transaction(async (manager) => {
         await this.seedAdminUser(manager);
