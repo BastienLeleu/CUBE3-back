@@ -27,9 +27,9 @@ Write-Host "==========================================================" -Foregro
 Write-Host " 💡 ASTUCE : Ouvrez Grafana (http://localhost:3001) pour voir le pic de charge en direct !" -ForegroundColor Green
 Write-Host ""
 
-$cmdArgs = @("exec", "-it", "collector-siege", "siege", "-c", $Concurrent, "-t", $Time, "-f", "/loadtest/urls.txt")
+$siegeCmd = "while ! command -v siege >/dev/null 2>&1; do sleep 1; done; siege -c $Concurrent -t $Time -f /loadtest/urls.txt"
 if ($Benchmark) {
-    $cmdArgs += "-b"
+    $siegeCmd += " -b"
 }
 
-docker @cmdArgs
+docker exec -it collector-siege sh -c $siegeCmd
