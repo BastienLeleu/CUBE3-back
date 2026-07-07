@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import {
   HealthCheckService,
   TypeOrmHealthIndicator,
@@ -7,6 +8,7 @@ import {
   HealthIndicatorResult,
 } from '@nestjs/terminus';
 
+@SkipThrottle()
 @Controller('api/health')
 export class HealthController {
   constructor(

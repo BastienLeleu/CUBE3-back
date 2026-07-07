@@ -1,7 +1,7 @@
 FROM debian:bookworm-slim
 
 # Installation de Siege et création d'un utilisateur non-root dédié (sécurité Checkov)
-RUN apt-get update && apt-get install -y --no-install-recommends siege \
+RUN apt-get update && apt-get install -y --no-install-recommends siege=4.1.6-1 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r loadtest && useradd -r -g loadtest -m -d /home/loadtest -s /bin/sh loadtest \
     && mkdir -p /loadtest && chown -R loadtest:loadtest /loadtest /home/loadtest
