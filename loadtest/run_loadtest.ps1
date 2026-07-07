@@ -27,9 +27,12 @@ Write-Host "==========================================================" -Foregro
 Write-Host " 💡 ASTUCE : Ouvrez Grafana (http://localhost:3001) pour voir le pic de charge en direct !" -ForegroundColor Green
 Write-Host ""
 
-$cmdArgs = @("exec", "-it", "collector-siege", "siege", "-c", $Concurrent, "-t", $Time, "-f", "/loadtest/urls.txt")
+$cmdArgs = @("exec", "-it", "collector-siege", "siege", "-c", $Concurrent, "-t", $Time, "-f", "/loadtest/urls.txt", "--log=/loadtest/siege_history.log")
 if ($Benchmark) {
     $cmdArgs += "-b"
 }
 
-docker @cmdArgs
+docker @cmdArgs | Tee-Object -FilePath "$PSScriptRoot\last_report.txt"
+Write-Host ""
+Write-Host "✅ Rapport complet sauvegardé dans : $PSScriptRoot\last_report.txt" -ForegroundColor Green
+Write-Host "✅ Historique CSV des tirs de charge  : $PSScriptRoot\siege_history.log" -ForegroundColor Green

@@ -34,9 +34,16 @@ docker exec -it collector-siege siege -c 50 -t 30S -f /loadtest/urls.txt
 docker exec -it collector-siege siege -c 50 -t 30S http://backend:3000/products
 ```
 
+## 📁 3. Fichiers de rapports générés (Résultats)
+
+À chaque exécution via le script PowerShell, les résultats sont automatiquement enregistrés dans le dossier `loadtest/` sur votre machine Windows :
+
+1. **`last_report.txt`** : Contient le rapport complet et lisible du dernier tir de charge (nombre de requêtes, disponibilité, temps de réponse moyen, débit req/s).
+2. **`siege_history.log`** : Fichier d'historique au format CSV qui compile ligne par ligne toutes vos exécutions successives pour comparer l'évolution des performances dans le temps.
+
 ---
 
-## 📊 3. Superviser le test en direct sur Grafana
+## 📊 4. Superviser le test en direct sur Grafana
 
 1. Ouvrez votre navigateur sur le Dashboard Grafana : **[http://localhost:3001](http://localhost:3001)**
 2. Lancez le test de charge dans votre terminal.
