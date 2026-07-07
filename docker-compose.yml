@@ -91,12 +91,32 @@ services:
     container_name: collector-pghero
     restart: always
     environment:
-      DATABASE_URL: postgres://collector:collector_password@postgres:5432/collector_db
+      DATABASE_URL: postgres://${POSTGRES_USER:-collector}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-collector_db}
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - collector-network
+
+  # 6. Siege (Test de charge & Benchmarking HTTP)
+  siege:
+    image: alpine:3.19
+    container_name: collector-siege
+    working_dir: /loadtest
+    volumes:
+      - ./loadtest:/loadtest
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache siege
+        echo "=========================================================="
+        echo " 🚀 Conteneur Siege prêt pour les tests de charge CUBE3 !"
+        echo "=========================================================="
+        tail -f /dev/null
+    depends_on:
+      - backend
     networks:
       - collector-network
 
