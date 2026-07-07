@@ -102,19 +102,13 @@ services:
 
   # 6. Siege (Test de charge & Benchmarking HTTP)
   siege:
-    image: alpine:3.19
+    build:
+      context: ./loadtest
+      dockerfile: Dockerfile
     container_name: collector-siege
     working_dir: /loadtest
     volumes:
       - ./loadtest:/loadtest
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        apk add --no-cache siege
-        echo "=========================================================="
-        echo " 🚀 Conteneur Siege prêt pour les tests de charge CUBE3 !"
-        echo "=========================================================="
-        tail -f /dev/null
     depends_on:
       - backend
     networks:
