@@ -32,7 +32,7 @@ jobs:
       - name: Healthcheck (Test if API is responding)
         run: |
           echo "Sending HTTP GET request to localhost:3000..."
-          curl -v -f http://localhost:3000 || { echo "❌ API ne répond pas !"; exit 1; }
+          curl -v -f http://127.0.0.1:3000 || { echo "❌ API ne répond pas !"; exit 1; }
           echo "✅ Déploiement simulé réussi ! L'API fonctionne dans le conteneur."
 
       - name: Cleanup Container

@@ -1,0 +1,26 @@
+language: "fr-FR"
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - ".*"
+
+  path_instructions:
+    - path: "**/*.ts"
+      instructions: |
+        - Le backend utilise NestJS. Vérifie le respect strict des principes d'injection de dépendance et de l'architecture modulaire.
+        - Assure-toi qu'il y a des tests (Jest) et que la couverture de code est suffisante pour valider la Quality Gate de SonarQube (80%).
+        - Vérifie la sécurité des endpoints et la bonne utilisation des Guards/Interceptors.
+
+chat:
+  auto_reply: true

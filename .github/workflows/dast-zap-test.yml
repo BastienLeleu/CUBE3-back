@@ -29,8 +29,8 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           ADMIN_DEFAULT_PASSWORD: ${{ secrets.ADMIN_DEFAULT_PASSWORD }}
         run: |
-          npm run start:prod &
-          npx wait-on http://localhost:3000 --timeout 60000
+          npm run start:prod > backend.log 2>&1 &
+          npx wait-on http://127.0.0.1:3000 --timeout 60000
 
       - name: Create ZAP working directory
         run: mkdir -p ${{ github.workspace }}/zap && chmod 777 ${{ github.workspace }}/zap
