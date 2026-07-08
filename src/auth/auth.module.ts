@@ -16,14 +16,25 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          // On doit utiliser as any car @nestjs/jwt attend le type strict StringValue de 'ms' et non pas un simple string
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          expiresIn: configService.get<string>('JWT_EXPIRATION', '1d') as any,
-        },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (
+          process.env.NODE_ENV === 'production' &&
+          (!secret || secret === 'default_secret')
+        ) {
+          throw new Error(
+            'CRITICAL SECURITY ERROR: JWT_SECRET is missing or using default_secret in production!',
+          );
+        }
+        return {
+          secret: secret || 'default_secret',
+          signOptions: {
+            // On doit utiliser as any car @nestjs/jwt attend le type strict StringValue de 'ms' et non pas un simple string
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            expiresIn: configService.get<string>('JWT_EXPIRATION', '1d') as any,
+          },
+        };
+      },
     }),
   ],
   controllers: [AuthController],

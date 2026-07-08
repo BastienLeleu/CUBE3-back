@@ -18,10 +18,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (
+      process.env.NODE_ENV === 'production' &&
+      (!secret || secret === 'default_secret')
+    ) {
+      throw new Error(
+        'CRITICAL SECURITY ERROR: JWT_SECRET is missing or using default_secret in production!',
+      );
+    }
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'default_secret',
+      secretOrKey: secret || 'default_secret',
     });
   }
 

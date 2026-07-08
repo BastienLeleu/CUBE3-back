@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-collector}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -58,7 +58,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     depends_on:
       - backend
     networks:
@@ -91,7 +91,7 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-collector}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-collector_db}
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
