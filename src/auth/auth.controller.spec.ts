@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { UserRole, UserStatus } from '../users/entities/user.entity';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -33,10 +34,28 @@ describe('AuthController', () => {
 
   describe('register', () => {
     it('should call authService.register and return the result', async () => {
-      const dto = { email: 'test@test.com', password: 'password', first_name: 'John', last_name: 'Doe' };
-      const expectedResult = { message: 'Inscription réussie', user: { id: '1', ...dto, role: 'user' as any, status: 'active' as any, created_at: new Date(), updated_at: new Date() } };
-      
-      authService.register.mockResolvedValue(expectedResult as any);
+      const dto = {
+        email: 'test@test.com',
+        password: 'password',
+        first_name: 'John',
+        last_name: 'Doe',
+      };
+      const expectedResult = {
+        message: 'Inscription réussie',
+        user: {
+          id: '1',
+          ...dto,
+          role: UserRole.USER,
+          status: UserStatus.ACTIVE,
+          created_at: new Date(),
+          updated_at: new Date(),
+          phone: null,
+          avatar_url: null,
+          password_hash: '',
+        },
+      };
+
+      authService.register.mockResolvedValue(expectedResult);
 
       const result = await controller.register(dto);
 
@@ -50,9 +69,11 @@ describe('AuthController', () => {
       const dto = { email: 'test@test.com', password: 'password' };
       const mockUser = { id: '1', email: 'test@test.com' };
       const expectedResult = { access_token: 'token', user: mockUser };
-      
-      authService.validateUser.mockResolvedValue(mockUser as any);
-      authService.login.mockResolvedValue(expectedResult as any);
+
+      // @ts-expect-error: mock partiel
+      authService.validateUser.mockResolvedValue(mockUser);
+      // @ts-expect-error: mock partiel
+      authService.login.mockResolvedValue(expectedResult);
 
       const result = await controller.login(dto);
 

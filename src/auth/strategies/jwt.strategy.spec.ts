@@ -7,7 +7,7 @@ import { UnauthorizedException } from '@nestjs/common';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
-  let userRepository: any;
+  let userRepository: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     const mockUserRepository = {
@@ -39,12 +39,19 @@ describe('JwtStrategy', () => {
   describe('validate', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       userRepository.findOne.mockResolvedValue(null);
-      await expect(strategy.validate({ sub: '1' })).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate({ sub: '1' })).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if user is banned', async () => {
-      userRepository.findOne.mockResolvedValue({ id: '1', status: UserStatus.BANNED });
-      await expect(strategy.validate({ sub: '1' })).rejects.toThrow(UnauthorizedException);
+      userRepository.findOne.mockResolvedValue({
+        id: '1',
+        status: UserStatus.BANNED,
+      });
+      await expect(strategy.validate({ sub: '1' })).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should return user if valid', async () => {

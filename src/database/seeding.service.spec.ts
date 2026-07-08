@@ -9,8 +9,8 @@ jest.mock('bcrypt');
 
 describe('SeedingService', () => {
   let service: SeedingService;
-  let userRepository: any;
-  let configService: any;
+  let userRepository: Record<string, jest.Mock>;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     const mockUserRepository = {
@@ -39,7 +39,7 @@ describe('SeedingService', () => {
 
     service = module.get<SeedingService>(SeedingService);
     userRepository = module.get(getRepositoryToken(User));
-    configService = module.get<ConfigService>(ConfigService);
+    configService = module.get(ConfigService);
   });
 
   afterEach(() => {
@@ -56,14 +56,14 @@ describe('SeedingService', () => {
 
     it('should skip seeding if ADMIN_DEFAULT_EMAIL or PASSWORD is not set', async () => {
       userRepository.count.mockResolvedValue(0);
-      configService.get.mockReturnValue(null);
+      (configService.get as jest.Mock).mockReturnValue(null);
       await service.onApplicationBootstrap();
       expect(userRepository.create).not.toHaveBeenCalled();
     });
 
     it('should create admin user if none exists and config is provided', async () => {
       userRepository.count.mockResolvedValue(0);
-      configService.get.mockImplementation((key: string) => {
+      (configService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'ADMIN_DEFAULT_EMAIL') return 'admin@test.com';
         if (key === 'ADMIN_DEFAULT_PASSWORD') return 'password123';
       });
