@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Product } from '../../products/entities/product.entity';
+import { CartItem } from '../../cart/entities/cart-item.entity';
 
 export enum UserRole {
   USER = 'user',
@@ -58,4 +61,10 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @OneToMany(() => Product, (product) => product.seller)
+  products: Product[];
+
+  @OneToMany(() => CartItem, (cartItem) => cartItem.user)
+  cart_items: CartItem[];
 }

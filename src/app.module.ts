@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { User } from './users/entities/user.entity';
+import { Product } from './products/entities/product.entity';
 import { SeedingService } from './database/seeding.service';
 import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -25,16 +29,36 @@ import { AuthModule } from './auth/auth.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: () => ({
-        type: 'better-sqlite3' as const,
-        database: 'database.sqlite',
-        autoLoadEntities: true,
-        synchronize: true, // ATTENTION: À désactiver en production pure
-      }),
+      useFactory: (configService: ConfigService) => {
+        const dbUrl = configService.get<string>('DATABASE_URL');
+        if (dbUrl) {
+          return {
+            type: 'postgres',
+            url: dbUrl,
+            autoLoadEntities: true,
+            synchronize: true, // ATTENTION: À désactiver en production pure
+          };
+        }
+        return {
+          type: 'better-sqlite3' as const,
+          database: 'database.sqlite',
+          autoLoadEntities: true,
+          synchronize: true,
+          logging: true,
+        };
+      },
     }),
     // On enregistre l'entité User pour pouvoir utiliser le Repository dans SeedingService
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Product]),
     AuthModule,
+    ProductsModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 30,
+      },
+    ]),
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedingService],

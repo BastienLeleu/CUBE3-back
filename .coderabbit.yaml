@@ -13,7 +13,7 @@ reviews:
     enabled: true
     drafts: false
     base_branches:
-      - ".*"
+      - ".+"
 
   path_instructions:
     - path: "**/*.ts"

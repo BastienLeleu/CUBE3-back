@@ -40,12 +40,22 @@ export class AuthService {
 
     const savedUser = await this.userRepository.save(newUser);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password_hash, ...userWithoutPassword } = savedUser;
-
     return {
       message: 'Inscription réussie',
-      user: userWithoutPassword,
+      user: {
+        id: savedUser.id,
+        email: savedUser.email,
+        first_name: savedUser.first_name,
+        last_name: savedUser.last_name,
+        role: savedUser.role,
+        status: savedUser.status,
+        created_at: savedUser.created_at,
+        updated_at: savedUser.updated_at,
+        phone: savedUser.phone,
+        avatar_url: savedUser.avatar_url,
+        products: [],
+        cart_items: [],
+      },
     };
   }
 
@@ -79,12 +89,22 @@ export class AuthService {
   ): Promise<{ access_token: string; user: Omit<User, 'password_hash'> }> {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password_hash, ...userWithoutPassword } = user;
-
     return {
       access_token: this.jwtService.sign(payload),
-      user: userWithoutPassword,
+      user: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role,
+        status: user.status,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        phone: user.phone,
+        avatar_url: user.avatar_url,
+        products: user.products || [],
+        cart_items: user.cart_items || [],
+      },
     };
   }
 }

@@ -44,14 +44,17 @@ describe('AuthController', () => {
         message: 'Inscription réussie',
         user: {
           id: '1',
-          ...dto,
+          email: dto.email,
+          first_name: dto.first_name,
+          last_name: dto.last_name,
           role: UserRole.USER,
           status: UserStatus.ACTIVE,
           created_at: new Date(),
           updated_at: new Date(),
           phone: null,
           avatar_url: null,
-          password_hash: '',
+          products: [],
+          cart_items: [],
         },
       };
 
