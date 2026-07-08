@@ -1,0 +1,73 @@
+name: Main CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * 0'
+
+jobs:
+  build-and-test:
+    uses: ./.github/workflows/build-unit-tests.yml
+
+  secure-iac-dockerfile-scan:
+    needs: build-and-test
+    uses: ./.github/workflows/secure-iac-dockerfile-scan.yml
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+
+  secret-scanning:
+    needs: build-and-test
+    uses: ./.github/workflows/secret-scanning.yml
+    secrets: inherit
+
+  code-quality-sast:
+    needs: build-and-test
+    uses: ./.github/workflows/code-quality-sast.yml
+    secrets: inherit
+
+  dast_scan:
+    needs: build-and-test
+    uses: ./.github/workflows/dast-zap-test.yml
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    secrets: inherit
+
+  build-and-scan-docker:
+    needs: [code-quality-sast, secret-scanning, secure-iac-dockerfile-scan]
+    uses: ./.github/workflows/build-and-scan-docker.yml
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    secrets: inherit
+
+  publish-docker-hub:
+    needs: build-and-scan-docker
+    uses: ./.github/workflows/publish-docker-hub.yml
+    secrets: inherit
+
+  deploy-simulator:
+    needs: publish-docker-hub
+    uses: ./.github/workflows/deploy-simulator.yml
+    secrets: inherit
+
+  send-notifications:
+    needs: [deploy-simulator]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Deployment status
+        run: |
+          if [ "${{ needs.deploy-simulator.result }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+            exit 1
+          fi

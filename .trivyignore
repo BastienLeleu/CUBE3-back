@@ -1,0 +1,11 @@
+# Liste des vulnérabilités CVE ignorées par Trivy
+# Format: ajouter un identifiant CVE par ligne (ex: CVE-2023-12345)
+# Ajoutez des commentaires avec '#' pour justifier pourquoi la vulnérabilité est acceptée.
+
+# OpenSSL PKCS7_verify() Use-After-Free dans Alpine.
+# Faux positif : NestJS n'utilise pas la libssl de l'OS pour faire de la vérification PKCS#7/S-MIME.
+CVE-2026-45447
+
+# picomatch ReDoS dans Node.js.
+# Faux positif : Notre API NestJS n'accepte pas de pattern "glob" défini par l'utilisateur externe.
+CVE-2026-33671

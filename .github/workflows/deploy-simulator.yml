@@ -1,0 +1,33 @@
+name: Deploy Simulator (Smoke Test)
+
+on:
+  workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DEPLOY_APPLI_NAME:
+        required: true
+
+jobs:
+  smoke-test:
+    name: 🧪 Smoke Test (Simulated Deploy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull Docker image from Docker Hub
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DEPLOY_APPLI_NAME }}:latest
+
+      - name: Start Docker container in background
+        run: |
+          docker run -d -p 3000:3000 --name nestjs-api-demo ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DEPLOY_APPLI_NAME }}:latest
+          echo "Waiting 10 seconds for the application to boot..."
+          sleep 10
+
+      - name: Healthcheck (Test if API is responding)
+        run: |
+          echo "Sending HTTP GET request to localhost:3000..."
+          curl -v -f http://localhost:3000 || { echo "❌ API ne répond pas !"; exit 1; }
+          echo "✅ Déploiement simulé réussi ! L'API fonctionne dans le conteneur."
+
+      - name: Cleanup Container
+        if: always()
+        run: docker rm -f nestjs-api-demo || true
