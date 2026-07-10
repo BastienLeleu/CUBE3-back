@@ -20,10 +20,21 @@ jobs:
       - name: Update npm & Install
         run: |
           npm install -g npm@latest
-          npm ci
+          for i in 1 2 3; do
+            npm ci && break
+            if [ $i -eq 3 ]; then
+              echo "npm ci failed after 3 attempts."
+              exit 1
+            fi
+            echo "npm ci failed. Retrying in $((i * 5)) seconds..."
+            sleep $((i * 5))
+          done
 
       - name: Security Audit (SCA)
         run: npm audit --audit-level=high
+
+      - name: Check Unused Dependencies (depcheck)
+        run: npx depcheck
 
       - name: Run Lint
         run: npm run lint

@@ -1,19 +1,36 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { User } from './users/entities/user.entity';
+import { Product } from './products/entities/product.entity';
 import { SeedingService } from './database/seeding.service';
 import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
+import { CartModule } from './cart/cart.module';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
+    PrometheusModule.register({
+      path: '/metrics',
+      defaultMetrics: {
+        enabled: true,
+      },
+    }),
+    HealthModule,
     // Configuration globale des variables d'environnement
     ConfigModule.forRoot({
       isGlobal: true, // Rend le ConfigService disponible partout sans l'importer explicitement
       validationSchema: Joi.object({
+        CORS_ORIGIN: Joi.string().uri().default('http://localhost:4200'),
+        NODE_ENV: Joi.string()
+          .valid('development', 'production', 'test')
+          .default('development'),
         PORT: Joi.number().default(3000),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().default('1d'),
@@ -25,18 +42,49 @@ import { AuthModule } from './auth/auth.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: () => ({
-        type: 'better-sqlite3' as const,
-        database: 'database.sqlite',
-        autoLoadEntities: true,
-        synchronize: true, // ATTENTION: À désactiver en production pure
-      }),
+      useFactory: (configService: ConfigService) => {
+        const dbUrl = configService.get<string>('DATABASE_URL');
+        const isProduction =
+          configService.get<string>('NODE_ENV') === 'production';
+        if (dbUrl) {
+          return {
+            type: 'postgres',
+            url: dbUrl,
+            autoLoadEntities: true,
+            synchronize:
+              configService.get<string>('DB_SYNCHRONIZE') === 'true' ||
+              !isProduction, // Enabled via env var in Docker Compose POC
+          };
+        }
+        return {
+          type: 'better-sqlite3' as const,
+          database: 'database.sqlite',
+          autoLoadEntities: true,
+          synchronize: !isProduction,
+          logging: true,
+        };
+      },
     }),
     // On enregistre l'entité User pour pouvoir utiliser le Repository dans SeedingService
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Product]),
     AuthModule,
+    ProductsModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 30,
+      },
+    ]),
+    CartModule,
   ],
   controllers: [AppController],
-  providers: [AppService, SeedingService],
+  providers: [
+    AppService,
+    SeedingService,
+    {
+      provide: 'APP_GUARD',
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -81,19 +81,22 @@ describe('AuthService', () => {
 
       const result = await service.register(dto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('password', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('password', 12);
       expect(userRepository.create).toHaveBeenCalledWith({
         ...dto,
         password_hash: 'hashed_password',
       });
       expect(userRepository.save).toHaveBeenCalledWith(createdUser);
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password_hash, ...expectedUser } = savedUser;
-      expect(result).toEqual({
-        message: 'Inscription réussie',
-        user: expectedUser,
-      });
+      expect(result.user).not.toHaveProperty('password');
+      expect(result.user).not.toHaveProperty('password_hash');
+      expect(result.user.email).toBe(dto.email);
+      expect(result.user.first_name).toBe(dto.first_name);
+      expect(result.user.last_name).toBe(dto.last_name);
+      expect(result.user.role).toBe(UserRole.USER);
+      expect(result.user.status).toBe(UserStatus.ACTIVE);
+      expect(result.user.products).toEqual([]);
+      expect(result.user.cart_items).toEqual([]);
     });
   });
 
@@ -162,9 +165,47 @@ describe('AuthService', () => {
         email: user.email,
         role: user.role,
       });
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password_hash, ...expectedUser } = user;
-      expect(result).toEqual({ access_token: 'jwt_token', user: expectedUser });
+      expect(result.access_token).toBe('jwt_token');
+      expect(result.user).not.toHaveProperty('password_hash');
+      expect(result.user.id).toBe(user.id);
+      expect(result.user.email).toBe(user.email);
+      expect(result.user.role).toBe(user.role);
+      expect(result.user.products).toEqual([]);
+      expect(result.user.cart_items).toEqual([]);
+    });
+
+    it('should return user with products if user has products', async () => {
+      const user = {
+        id: '2',
+        email: 'seller@test.com',
+        role: UserRole.USER,
+        password_hash: 'hash2',
+        products: [{ id: 'p1', title: 'Product 1' }],
+      } as unknown as User;
+      jwtService.sign.mockReturnValue('jwt_token');
+
+      const result = await service.login(user);
+
+      expect(result.user.products).toEqual(user.products);
+      expect(result.user.cart_items).toEqual([]);
+      expect(result.user).not.toHaveProperty('password_hash');
+    });
+
+    it('should return user with cart_items if user has cart_items', async () => {
+      const user = {
+        id: '3',
+        email: 'buyer@test.com',
+        role: UserRole.USER,
+        password_hash: 'hash3',
+        cart_items: [{ id: 'c1', product_id: 'p1', quantity: 1 }],
+      } as unknown as User;
+      jwtService.sign.mockReturnValue('jwt_token');
+
+      const result = await service.login(user);
+
+      expect(result.user.products).toEqual([]);
+      expect(result.user.cart_items).toEqual(user.cart_items);
+      expect(result.user).not.toHaveProperty('password_hash');
     });
   });
 });

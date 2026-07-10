@@ -5,6 +5,11 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Request } from 'express';
+
+export const cookieExtractor = (req: Request): string | null => {
+  return req?.cookies?.['access_token'] || null;
+};
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -13,10 +18,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (
+      process.env.NODE_ENV === 'production' &&
+      (!secret || secret === 'default_secret')
+    ) {
+      throw new Error(
+        'CRITICAL SECURITY ERROR: JWT_SECRET is missing or using default_secret in production!',
+      );
+    }
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'default_secret',
+      secretOrKey: secret || 'default_secret',
     });
   }
 

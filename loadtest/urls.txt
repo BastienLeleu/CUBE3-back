@@ -1,0 +1,5 @@
+# Liste des endpoints à tester avec Siege
+# Format : URL [POST/GET/PUT] [headers]
+http://backend:3000/products
+http://backend:3000/api/health
+http://backend:3000/

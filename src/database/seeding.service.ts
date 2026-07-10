@@ -1,9 +1,11 @@
 import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'node:crypto';
 import { User, UserRole, UserStatus } from '../users/entities/user.entity';
+import { Product, ProductCondition } from '../products/entities/product.entity';
 
 @Injectable()
 export class SeedingService implements OnApplicationBootstrap {
@@ -12,18 +14,51 @@ export class SeedingService implements OnApplicationBootstrap {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
     private readonly configService: ConfigService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    await this.seedAdminUser();
+    const isProduction =
+      this.configService.get<string>('NODE_ENV') === 'production';
+    const forceSeeding =
+      this.configService.get<string>('FORCE_SEEDING') === 'true' ||
+      this.configService.get<string>('ENABLE_SEEDING') === 'true';
+
+    if (isProduction && !forceSeeding) {
+      this.logger.log(
+        'Seeding is disabled in production environment (use FORCE_SEEDING=true to override).',
+      );
+      return;
+    }
+
+    try {
+      await this.userRepository.manager.transaction(async (manager) => {
+        await this.seedAdminUser(manager);
+        const sellers = await this.seedSellers(manager);
+        if (sellers.length > 0) {
+          await this.seedProducts(manager, sellers);
+        }
+
+        this.logger.log('Seeding transaction committed successfully.');
+      });
+    } catch (error) {
+      const err = error as Error;
+      this.logger.error(
+        'Seeding transaction failed, rolling back...',
+        err.stack,
+      );
+    }
   }
 
-  private async seedAdminUser(): Promise<void> {
-    const userCount = await this.userRepository.count();
-    if (userCount > 0) {
-      this.logger.log('Database already seeded. Skipping Admin creation.');
-      return;
+  private async seedAdminUser(manager: EntityManager): Promise<boolean> {
+    const adminCount = await manager.count(User, {
+      where: { role: UserRole.ADMIN },
+    });
+    if (adminCount > 0) {
+      this.logger.log('Admin user already exists. Skipping admin seed.');
+      return false;
     }
 
     const adminEmail = this.configService.get<string>('ADMIN_DEFAULT_EMAIL');
@@ -41,7 +76,7 @@ export class SeedingService implements OnApplicationBootstrap {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(adminPassword, saltRounds);
 
-    const admin = this.userRepository.create({
+    const admin = manager.create(User, {
       email: adminEmail,
       password_hash: passwordHash,
       first_name: 'Admin',
@@ -50,7 +85,150 @@ export class SeedingService implements OnApplicationBootstrap {
       status: UserStatus.ACTIVE,
     });
 
-    await this.userRepository.save(admin);
+    await manager.save(User, admin);
     this.logger.log(`Admin user created with email: ${adminEmail}`);
+    return true;
+  }
+
+  private async seedSellers(manager: EntityManager): Promise<User[]> {
+    const count = await manager.count(User, {
+      where: { role: UserRole.USER },
+    });
+    if (count > 0) {
+      this.logger.log('Sellers already exist. Skipping sellers seed.');
+      return manager.find(User, { where: { role: UserRole.USER } });
+    }
+
+    const saltRounds = 10;
+
+    let sellerPassword = this.configService.get<string>(
+      'SELLER_DEFAULT_PASSWORD',
+    );
+    if (!sellerPassword) {
+      sellerPassword = crypto.randomBytes(16).toString('hex');
+      this.logger.log(
+        'No SELLER_DEFAULT_PASSWORD provided. Generated a secure random password for sellers.',
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(sellerPassword, saltRounds);
+
+    const sellersData = [
+      { email: 'seller1@test.com', first_name: 'Alice', last_name: 'Smith' },
+      { email: 'seller2@test.com', first_name: 'Bob', last_name: 'Johnson' },
+      { email: 'seller3@test.com', first_name: 'Charlie', last_name: 'Brown' },
+    ];
+
+    const sellers: User[] = [];
+    for (const data of sellersData) {
+      const seller = manager.create(User, {
+        email: data.email,
+        password_hash: passwordHash,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        role: UserRole.USER,
+        status: UserStatus.ACTIVE,
+      });
+      sellers.push(await manager.save(User, seller));
+    }
+
+    this.logger.log(`Seeded ${sellers.length} sellers.`);
+    return sellers;
+  }
+
+  private async seedProducts(
+    manager: EntityManager,
+    sellers: User[],
+  ): Promise<boolean> {
+    const count = await manager.count(Product);
+    if (count > 0) {
+      this.logger.log('Products already exist. Skipping products seed.');
+      return false;
+    }
+
+    const productsData = [
+      {
+        title: 'Carte Dracaufeu Edition 1',
+        price: 1500,
+        category: 'Cartes',
+        condition: ProductCondition.VERY_GOOD,
+      },
+      {
+        title: 'Figurine Goldorak Vintage',
+        price: 300,
+        category: 'Figurines',
+        condition: ProductCondition.GOOD,
+      },
+      {
+        title: 'Vinyle Pink Floyd Original',
+        price: 120,
+        category: 'Musique',
+        condition: ProductCondition.USED,
+      },
+      {
+        title: 'Bande Dessinée Tintin',
+        price: 80,
+        category: 'Livres',
+        condition: ProductCondition.NEW,
+      },
+      {
+        title: 'Montre Gousset Argent',
+        price: 450,
+        category: 'Horlogerie',
+        condition: ProductCondition.VERY_GOOD,
+      },
+      {
+        title: 'Appareil Photo Leica',
+        price: 2500,
+        category: 'Photographie',
+        condition: ProductCondition.GOOD,
+      },
+      {
+        title: "Pièce en or Louis d'Or",
+        price: 350,
+        category: 'Numismatique',
+        condition: ProductCondition.VERY_GOOD,
+      },
+      {
+        title: 'Jeu Vidéo Super Mario 64',
+        price: 60,
+        category: 'Jeux Vidéo',
+        condition: ProductCondition.USED,
+      },
+      {
+        title: 'Timbres Rares France',
+        price: 200,
+        category: 'Philatélie',
+        condition: ProductCondition.NEW,
+      },
+      {
+        title: 'Vase Ming Ancien',
+        price: 5000,
+        category: 'Antiquités',
+        condition: ProductCondition.GOOD,
+      },
+    ];
+
+    let i = 1;
+    for (const data of productsData) {
+      // Pick a random seller securely
+      const seller = sellers[crypto.randomInt(0, sellers.length)];
+
+      const product = manager.create(Product, {
+        title: data.title,
+        description: `Une magnifique pièce de collection : ${data.title}. Objet authentique et rare.`,
+        price: data.price,
+        category: data.category,
+        condition: data.condition,
+        image_url: `https://picsum.photos/seed/${i}/400/300`,
+        seller: seller,
+      });
+
+      await manager.save(Product, product);
+      i++;
+    }
+
+    this.logger.log(`Seeded ${productsData.length} products.`);
+    return true;
   }
 }

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JwtStrategy } from './jwt.strategy';
+import { JwtStrategy, cookieExtractor } from './jwt.strategy';
+import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User, UserStatus } from '../../users/entities/user.entity';
@@ -34,6 +35,25 @@ describe('JwtStrategy', () => {
 
     strategy = module.get<JwtStrategy>(JwtStrategy);
     userRepository = module.get(getRepositoryToken(User));
+  });
+
+  describe('cookieExtractor', () => {
+    it('should return token if access_token cookie is present', () => {
+      const req = {
+        cookies: { access_token: 'valid_token' },
+      } as unknown as Request;
+      expect(cookieExtractor(req)).toBe('valid_token');
+    });
+
+    it('should return null if access_token cookie is absent', () => {
+      const req = { cookies: { other_cookie: 'value' } } as unknown as Request;
+      expect(cookieExtractor(req)).toBeNull();
+    });
+
+    it('should return null if cookies are undefined', () => {
+      const req = {} as Request;
+      expect(cookieExtractor(req)).toBeNull();
+    });
   });
 
   describe('validate', () => {

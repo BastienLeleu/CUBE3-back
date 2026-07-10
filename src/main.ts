@@ -1,6 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -21,8 +24,36 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  // Autorise le CORS si ton front est sur un autre port
-  app.enableCors();
+  // Active la gestion des cookies
+  app.use(cookieParser());
+
+  const configService = app.get(ConfigService);
+
+  // Vérification de sécurité critique en production : interdire le secret JWT par défaut ou absent
+  const jwtSecret = configService.get<string>('JWT_SECRET');
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (!jwtSecret || jwtSecret === 'default_secret')
+  ) {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: JWT_SECRET is missing or using default_secret in production environment!',
+    );
+  }
+
+  // Autorise le CORS de manière stricte
+  app.enableCors({
+    origin: configService.get<string>('CORS_ORIGIN') || 'http://localhost:4200',
+    credentials: true,
+  });
+
+  // Active la validation globale des DTOs
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
   console.log(`Application is running on: ${await app.getUrl()}`);

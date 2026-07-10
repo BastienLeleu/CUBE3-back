@@ -3,7 +3,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  MinLength,
+  IsStrongPassword,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -12,9 +12,19 @@ export class RegisterDto {
   email: string;
 
   @IsString()
-  @MinLength(8, {
-    message: 'Le mot de passe doit contenir au moins 8 caractères',
-  })
+  @IsStrongPassword(
+    {
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    },
+    {
+      message:
+        'Le mot de passe doit contenir au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un symbole',
+    },
+  )
   @IsNotEmpty()
   password: string;
 

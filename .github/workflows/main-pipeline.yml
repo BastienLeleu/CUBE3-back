@@ -2,9 +2,9 @@ name: Main CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: ["**"]
   pull_request:
-    branches: [ main ]
+    branches: ["**"]
   schedule:
     - cron: '0 2 * * 0'
 
@@ -67,6 +67,8 @@ jobs:
         run: |
           if [ "${{ needs.deploy-simulator.result }}" == "success" ]; then
             echo "✅ Deployment successful!"
+          elif [ "${{ needs.deploy-simulator.result }}" == "skipped" ]; then
+            echo "⏭️ Deployment skipped."
           else
             echo "❌ Deployment failed!"
             exit 1

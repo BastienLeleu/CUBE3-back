@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserRole, UserStatus } from '../users/entities/user.entity';
+import { Response } from 'express';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -44,14 +45,17 @@ describe('AuthController', () => {
         message: 'Inscription réussie',
         user: {
           id: '1',
-          ...dto,
+          email: dto.email,
+          first_name: dto.first_name,
+          last_name: dto.last_name,
           role: UserRole.USER,
           status: UserStatus.ACTIVE,
           created_at: new Date(),
           updated_at: new Date(),
           phone: null,
           avatar_url: null,
-          password_hash: '',
+          products: [],
+          cart_items: [],
         },
       };
 
@@ -65,21 +69,53 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('should call authService.validateUser and authService.login and return the result', async () => {
+    it('should call authService.validateUser and authService.login, set cookie and return the result', async () => {
       const dto = { email: 'test@test.com', password: 'password' };
       const mockUser = { id: '1', email: 'test@test.com' };
-      const expectedResult = { access_token: 'token', user: mockUser };
+      const expectedLoginResult = { access_token: 'token', user: mockUser };
+      const expectedControllerResult = {
+        message: 'Connexion réussie',
+        user: mockUser,
+      };
 
       // @ts-expect-error: mock partiel
       authService.validateUser.mockResolvedValue(mockUser);
       // @ts-expect-error: mock partiel
-      authService.login.mockResolvedValue(expectedResult);
+      authService.login.mockResolvedValue(expectedLoginResult);
 
-      const result = await controller.login(dto);
+      const mockResponse = {
+        cookie: jest.fn(),
+        clearCookie: jest.fn(),
+      } as unknown as Response;
+
+      const result = await controller.login(dto, mockResponse);
 
       expect(authService.validateUser).toHaveBeenCalledWith(dto);
       expect(authService.login).toHaveBeenCalledWith(mockUser);
-      expect(result).toEqual(expectedResult);
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'access_token',
+        'token',
+        expect.objectContaining({
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 24 * 60 * 60 * 1000,
+        }),
+      );
+      expect(result).toEqual(expectedControllerResult);
+    });
+  });
+
+  describe('logout', () => {
+    it('should clear the access_token cookie', () => {
+      const mockResponse = {
+        clearCookie: jest.fn(),
+      } as unknown as Response;
+
+      const result = controller.logout(mockResponse);
+
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('access_token');
+      expect(result).toEqual({ message: 'Déconnexion réussie' });
     });
   });
 });
